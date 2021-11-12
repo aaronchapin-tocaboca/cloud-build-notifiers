@@ -79,21 +79,53 @@ func (s *slackNotifier) SendNotification(ctx context.Context, build *cbpb.Build)
 }
 
 func (s *slackNotifier) writeMessage(build *cbpb.Build) (*slack.WebhookMessage, error) {
-	txt := fmt.Sprintf(
-		"Cloud Build (%s, %s): %s",
-		build.ProjectId,
-		build.Id,
-		build.Status,
-	)
+	branchName := build.Substitutions["BRANCH_NAME"]
+	commitSha := build.Substitutions["COMMIT_SHA"]
+	triggerName := build.Substitutions["TRIGGER_NAME"]
 
+	var txt string
 	var clr string
 	switch build.Status {
 	case cbpb.Build_SUCCESS:
 		clr = "good"
-	case cbpb.Build_FAILURE, cbpb.Build_INTERNAL_ERROR, cbpb.Build_TIMEOUT:
+		txt = fmt.Sprintf(
+			"A new build of %s has succeeded! :tocarocket:\nBranch:%s\nCommit:%s",
+			triggerName,
+			branchName,
+			commitSha,
+		)
+	case cbpb.Build_FAILURE:
 		clr = "danger"
+		txt = fmt.Sprintf(
+			"A new build of %s has failed! :tocascream:\nBranch:%s\nCommit:%s",
+			triggerName,
+			branchName,
+			commitSha,
+		)
+	case cbpb.Build_INTERNAL_ERROR:
+		clr = "danger"
+		txt = fmt.Sprintf(
+			"A new build of %s has had an internal error! :tocascream:\nBranch:%s\nCommit:%s",
+			triggerName,
+			branchName,
+			commitSha,
+		)
+	case cbpb.Build_TIMEOUT:
+		clr = "danger"
+		txt = fmt.Sprintf(
+			"A build of %s has had a timeout! :tocathinking:\nBranch:%s\nCommit:%s",
+			triggerName,
+			branchName,
+			commitSha,
+		)
 	default:
 		clr = "warning"
+		txt = fmt.Sprintf(
+			"A new build of %s has completed with an unexpected status! :tocathinking:\nBranch:%s\nCommit:%s",
+			triggerName,
+			branchName,
+			commitSha,
+		)
 	}
 
 	logURL, err := notifiers.AddUTMParams(build.LogUrl, notifiers.ChatMedium)
