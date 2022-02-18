@@ -118,6 +118,30 @@ func (s *slackNotifier) writeMessage(build *cbpb.Build) (*slack.WebhookMessage, 
 			branchName,
 			commitSha,
 		)
+	case cbpb.Build_CANCELLED:
+		clr = "warning"
+		txt = fmt.Sprintf(
+			"A build of %s was manually canceled. :no_good:\nBranch:%s\nCommit:%s",
+			triggerName,
+			branchName,
+			commitSha,
+		)
+	case cbpb.Build_EXPIRED:
+		clr = "warning"
+		txt = fmt.Sprintf(
+			"A build of %s has expired. :headstone:\nBranch:%s\nCommit:%s",
+			triggerName,
+			branchName,
+			commitSha,
+		)
+	case cbpb.Build_PENDING:
+		clr = "#bab8b8"
+		txt = fmt.Sprintf(
+			"A build of %s needs to be approved. :vertical_traffic_light:\nBranch:%s\nCommit:%s",
+			triggerName,
+			branchName,
+			commitSha,
+		)
 	default:
 		clr = "warning"
 		txt = fmt.Sprintf(
